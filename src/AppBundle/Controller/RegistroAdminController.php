@@ -127,10 +127,13 @@ class RegistroAdminController extends CRUDController {
         $mayusculas = "";
         $mayor = 0;
         $linea = 0;
+	$caracteresLinea = 0;
         if ($handle) {
             while (($line = fgets($handle)) !== false) {
                 $linea ++;
-                if (strlen(implode(preg_split($expresion, $line))) > $mayor) {
+		$caracteres = strlen(implode(preg_split($expresion, $line)));
+                if ($caracteres > $caracteresLinea) {
+		    $caracteresLinea = $caracteres;
                     $mayusculas = trim(implode(preg_split($expresion, $line)));
                     $mayor = $linea;
                 }
