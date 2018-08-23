@@ -16,7 +16,7 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 class UserAdmin extends AbstractAdmin {
 
     protected function configureRoutes(RouteCollection $collection) {
-        
+        $collection->remove("delete");
     }
 
     protected function configureDatagridFilters(DatagridMapper $datagridMapper) {
