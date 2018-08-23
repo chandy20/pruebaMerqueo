@@ -17,6 +17,7 @@ class UserAdmin extends AbstractAdmin {
 
     protected function configureRoutes(RouteCollection $collection) {
         $collection->remove("delete");
+        $collection->remove("edit");
     }
 
     protected function configureDatagridFilters(DatagridMapper $datagridMapper) {
