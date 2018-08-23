@@ -1,0 +1,28 @@
+services:
+#    app.twig_extension:  
+#        class: AppBundle\Twig\TwigExtensions
+#        public: true
+#        arguments:
+#            - '@service_container'
+#        tags:
+#            - { name: twig.extension }
+    app.admin.tipo_documento:
+        class: AppBundle\Admin\TipoDocumentoAdmin
+        arguments: [~, AppBundle\Entity\TipoDocumento, AppBundle:TipoDocumentoAdmin]
+        tags:
+            - { name: sonata.admin, manager_type: orm, group: user, label: Tipo de Documento }
+        public: true
+        
+    app.admin.user:
+        class: AppBundle\Admin\UserAdmin
+        arguments: [~, AppBundle\Entity\User, AppBundle:UserAdmin]
+        tags:
+            - { name: sonata.admin, manager_type: orm, group: user, label: User }
+        public: true
+
+    app.admin.registro:
+        class: AppBundle\Admin\RegistroAdmin
+        arguments: [~, AppBundle\Entity\Registro, AppBundle:RegistroAdmin]
+        tags:
+            - { name: sonata.admin, manager_type: orm, group: user, label: Importar datos }
+        public: true

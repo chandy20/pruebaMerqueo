@@ -1,0 +1,193 @@
+{% block form %}
+    {% import "@SonataAdmin/CRUD/base_edit_form_macro.html.twig" as form_helper %}
+    {{ sonata_block_render_event('sonata.admin.edit.form.top', { 'admin': admin, 'object': object }) }}
+
+    {# NEXT_MAJOR: remove default filter #}
+    {% set url = objectId|default(admin.id(object)) is not null ? 'edit' : 'create' %}
+
+    {% if not admin.hasRoute(url)%}
+        <div>
+            {{ "form_not_available"|trans({}, "SonataAdminBundle") }}
+        </div>
+    {% else %}
+        <form
+            {% if sonata_admin.adminPool.getOption('form_type') == 'horizontal' %}class="form-horizontal"{% endif %}
+            role="form" id="formulario"
+            {# NEXT_MAJOR: remove default filter #}
+            action="{% block sonata_form_action_url %}{{ admin.generateUrl(url, {'id': objectId|default(admin.id(object)), 'uniqid': admin.uniqid, 'subclass': app.request.get('subclass')}) }}{% endblock %}"
+            {% if form.vars.multipart %} enctype="multipart/form-data"{% endif %}
+            method="POST"
+            {% if not sonata_admin.adminPool.getOption('html5_validate') %}novalidate="novalidate"{% endif %}
+        {% block sonata_form_attributes %}{% endblock %}
+        >
+
+        {{ include('@SonataAdmin/Helper/render_form_dismissable_errors.html.twig') }}
+
+        {% block sonata_pre_fieldsets %}
+            <div class="row">
+            {% endblock %}
+
+            {% block sonata_tab_content %}
+                {% set has_tab = ((admin.formtabs|length == 1 and admin.formtabs|keys[0] != 'default') or admin.formtabs|length > 1 ) %}
+
+                <div class="col-md-12">
+                    {% if has_tab %}
+                        <div class="nav-tabs-custom">
+                            <ul class="nav nav-tabs" role="tablist">
+                                {% for name, form_tab in admin.formtabs %}
+                                    {% set _tab_name = ('tab_'~admin.code~'_'~loop.index)|replace({'.': '_', '\\': '_'}) %}
+                                    <li{% if (not app.request.query.has('_tab') and loop.index == 1) or (app.request.query.get('_tab') == _tab_name) %} class="active"{% endif %}>
+                                        <a href="#{{ _tab_name }}" class="changer-tab" aria-controls="{{ _tab_name }}" data-toggle="tab">
+                                            <i class="fa fa-exclamation-circle has-errors hide" aria-hidden="true"></i> {{ form_tab.label|trans({}, form_tab.translation_domain ?: admin.translationDomain) }}
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                            <div class="tab-content">
+                                {% for code, form_tab in admin.formtabs %}
+                                    {% set _tab_name = ('tab_'~admin.code~'_'~loop.index)|replace({'.': '_', '\\': '_'}) %}
+                                    <div class="tab-pane fade{% if (not app.request.query.has('_tab') and loop.first) or (app.request.query.get('_tab') == _tab_name) %} in active{% endif %}" id="{{ _tab_name }}">
+                                        <div class="box-body  container-fluid">
+                                            <div class="sonata-ba-collapsed-fields">
+                                                {% if form_tab.description != false %}
+                                                    <p>
+                                                        {{ form_tab.description|trans({}, form_tab.translation_domain ?: admin.translationDomain) }}
+                                                    </p>
+                                                {% endif %}
+
+                                                {{ form_helper.render_groups(admin, form, form_tab['groups'], has_tab) }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% else %}
+                        {{ form_helper.render_groups(admin, form, admin.formtabs['default'].groups, has_tab) }}
+                    {% endif %}
+                </div>
+            {% endblock %}
+
+            {% block sonata_post_fieldsets %}
+            </div>
+        {% endblock %}
+
+        {{ form_rest(form) }}
+        <label class="btn btn-success" onclick="crearConAjax()"  name="btn_create_and_create"><i class="fa fa-plus-circle" aria-hidden="true"></i> {{ 'label.create.ajax'|trans}}</label>
+        {% block formactions %}
+            <div class="sonata-ba-form-actions well well-small form-actions">
+                {% block sonata_form_actions %}
+                    {% if app.request.isxmlhttprequest %}
+                        {# NEXT_MAJOR: remove default filter #}
+                        {% if objectId|default(admin.id(object)) is not null %}
+                            <button type="submit" class="btn btn-success" name="btn_update"><i class="fa fa-save" aria-hidden="true"></i> {{ 'btn_update'|trans({}, 'SonataAdminBundle') }}</button>
+                            {% if admin.hasRoute('delete') and admin.hasAccess('delete', object) %}
+                                {{ 'delete_or'|trans({}, 'SonataAdminBundle') }}
+                                <a class="btn btn-danger" href="{{ admin.generateObjectUrl('delete', object) }}">
+                                    <i class="fa fa-minus-circle" aria-hidden="true"></i> {{ 'link_delete'|trans({}, 'SonataAdminBundle') }}
+                                </a>
+                            {% endif %}
+                        {% else %}
+                            <button type="submit" class="btn btn-success" name="btn_create"><i class="fa fa-plus-circle" aria-hidden="true"></i> {{ 'btn_create'|trans({}, 'SonataAdminBundle') }}</button>
+                        {% endif %}
+                    {% else %}
+                        {% if admin.supportsPreviewMode %}
+                            <button class="btn btn-info persist-preview" name="btn_preview" type="submit">
+                                <i class="fa fa-eye" aria-hidden="true"></i>
+                                {{ 'btn_preview'|trans({}, 'SonataAdminBundle') }}
+                            </button>
+                        {% endif %}
+                        {# NEXT_MAJOR: remove default filter #}
+                        {% if objectId|default(admin.id(object)) is not null %}
+                            <button type="submit" class="btn btn-success" name="btn_update_and_edit"><i class="fa fa-save" aria-hidden="true"></i> {{ 'btn_update_and_edit_again'|trans({}, 'SonataAdminBundle') }}</button>
+
+                            {% if admin.hasRoute('list') and admin.hasAccess('list') %}
+                                <button type="submit" class="btn btn-success" name="btn_update_and_list"><i class="fa fa-save"></i> <i class="fa fa-list" aria-hidden="true"></i> {{ 'btn_update_and_return_to_list'|trans({}, 'SonataAdminBundle') }}</button>
+                            {% endif %}
+
+                            {% if admin.hasRoute('delete') and admin.hasAccess('delete', object) %}
+                                {{ 'delete_or'|trans({}, 'SonataAdminBundle') }}
+                                <a class="btn btn-danger" href="{{ admin.generateObjectUrl('delete', object) }}"><i class="fa fa-minus-circle" aria-hidden="true"></i> {{ 'link_delete'|trans({}, 'SonataAdminBundle') }}</a>
+                            {% endif %}
+
+                            {% if admin.isAclEnabled() and admin.hasRoute('acl') and admin.hasAccess('acl', object) %}
+                                <a class="btn btn-info" href="{{ admin.generateObjectUrl('acl', object) }}"><i class="fa fa-users" aria-hidden="true"></i> {{ 'link_edit_acl'|trans({}, 'SonataAdminBundle') }}</a>
+                            {% endif %}
+                        {% else %}
+                            {% if admin.hasroute('edit') and admin.hasAccess('edit') %}
+                                <button class="btn btn-success" type="submit" name="btn_create_and_edit"><i class="fa fa-save" aria-hidden="true"></i> {{ 'btn_create_and_edit_again'|trans({}, 'SonataAdminBundle') }}</button>
+                            {% endif %}
+                            {% if admin.hasroute('list') and admin.hasAccess('list') %}
+                                <button type="submit" class="btn btn-success" name="btn_create_and_list"><i class="fa fa-save"></i> <i class="fa fa-list" aria-hidden="true"></i> {{ 'btn_create_and_return_to_list'|trans({}, 'SonataAdminBundle') }}</button>
+                            {% endif %}
+                            <button class="btn btn-success" type="submit" name="btn_create_and_create"><i class="fa fa-plus-circle" aria-hidden="true"></i> {{ 'btn_create_and_create_a_new_one'|trans({}, 'SonataAdminBundle') }}</button>
+                        {% endif %}
+                    {% endif %}
+                {% endblock %}
+            </div>
+        {% endblock formactions %}
+    </form>
+{% endif%}
+<script>
+    function crearConAjax() {
+        var url = "{{ path('admin_app_user_create')}}";
+        var formSerialize = $("#formulario").serialize();
+        if (validar() == "") {
+            $.post(url, formSerialize, function (response) {
+                //your callback here
+                console.log(response.result);
+                if(response.result === "ok"){
+                    alert("Se ha registrado el usuario satisfactoriamente");
+                    window.location.href = "{{path('admin_app_user_list')}}";
+                }
+            }, 'JSON');
+        } else {
+            alert(validar());
+        }
+    }
+
+    function validar() {
+        var caract = new RegExp(/^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/);
+        var tipoDocumento, nombres, documento, usuario, contrasena, repetir, rol, email;
+        tipoDocumento = $("#{{form.vars.id}}_tipoDocumento").val();
+        nombres = $("#{{form.vars.id}}_nombres").val();
+        documento = $("#{{form.vars.id}}_documento").val();
+        usuario = $("#{{form.vars.id}}_username").val();
+        contrasena = $("#{{form.vars.id}}_plainPassword_first").val();
+        repetir = $("#{{form.vars.id}}_plainPassword_second").val();
+        rol = $("#{{form.vars.id}}_roles").val();
+        email = $("#{{form.vars.id}}_email").val();
+        var error = "";
+        if (!tipoDocumento) {
+            error += "Debe seleccionar un tipo de documento\n";
+        }
+        if (!nombres) {
+            error += "Debe ingresar los nombres y apellidos\n";
+        }
+        if (!documento) {
+            error += "Debe ingresar un numero de documento\n";
+        }
+        if (!usuario) {
+            error += "Debe ingresar un nombre de usuario\n";
+        }
+        if (!email) {
+            error +="Debe ingresar un correo electrónico\n";
+        } else if (caract.test(email) == false) {
+            error += "Debe ingresar un correo electrónico válido\n";
+        }
+        if (!contrasena) {
+            error += "Debe ingresar una contraseña\n";
+        }
+        if (!repetir) {
+            error += "Debe ingresar una confirmación de contraseña \n";
+        }
+        if (repetir != contrasena) {
+            error += "la contraseña y su confirmación no coinciden\n";
+        }
+        return error;
+    }
+</script>
+
+{{ sonata_block_render_event('sonata.admin.edit.form.bottom', { 'admin': admin, 'object': object }) }}
+
+{% endblock %}

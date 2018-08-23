@@ -1,0 +1,18 @@
+# This file is auto-generated during the composer install
+parameters:
+    database_host: Comando: mysql -u “usuario” -p”contraseña” -h”nombre-o-dirección-del-host” nombre-de-la-base-de-datos < nombre-del-respaldo.sql
+    database_port: null
+    database_name: traccar
+    database_user: root
+    database_password: tko671029
+    encryption: ssl
+    auth_mode: login
+    project_name: TRACCAR
+    mailer_transport: smtp
+    mailer_host: smtp.gmail.com
+    mailer_user: alexander.correa.sanguino@gmail.com
+    mailer_password: tko671029
+    secret: ThisTokenIsNotSoSecretChangeIt
+    charset: UTF8
+    mapping_types:
+        bit: boolean
